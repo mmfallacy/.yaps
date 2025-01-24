@@ -25,7 +25,7 @@ Out of all these options, I decided to go with the fourth one as it would allow 
 
 > For reference, here is the link for my [.nixconfig's neovim user module](https://github.com/mmfallacy/.nixconfig/tree/main/user/neovim) which is loosely based on this [LazyVim home-manager configuration](https://github.com/LazyVim/LazyVim/discussions/1972)
 
-My home-manager Neovim configuration starts in `user/neovim/default.nix`. As I wanted my configuration to support a non-Nix setup, I decided to write two `init.lua`s which serves as the entry point.
+My home-manager Neovim configuration starts in [`user/neovim/default.nix`](https://github.com/mmfallacy/.nixconfig/blob/e69d9fdca1eab29c1ba7106aa2c1b7ca895c5b8f/user/neovim/default.nix). As I wanted my configuration to support a non-Nix setup, I decided to write two `init.lua`s which serves as the entry point.
 
 One of these entry points (`user/neovim/config/init.lua`) is meant to be used by Neovim as the configuration folder is symlinked/stowed to a normal system's `.config/nvim`. This file contains the code required to install and set up my package manager of choice. Also, this lua code also checks whether it is being run on a NixOS system (thru the `IS_NIXOS`), showing a warning when run in a NixOS environment.
 
@@ -167,3 +167,89 @@ pkgs.symlinkJoin {
 We then obtain the in-store location of `nvim-treesitter-grammars` as `parserpath`. Like `lazy-nvim`'s `dev.path`, `nvim-treesitter` also allows the user to set a `parser_install_dir` path. We can then use this to tell Neovim to look for parsers in `parserpath`. Lastly, ss per the documentation, we also need to add `parserpath` in neovim's runtimepath.
 
 ### LSPs
+
+Before, I typically use an LSP manager like `mason.nvim` and `mason-lspconfig.nvim` to set up LSPs. [Mason](https://github.com/williamboman/mason.nvim) is a portable package manager for Neovim that helps you install LSP servers, DAP servers, linters and formatters. Since it handles the installation of these packages, we again cannot use it with nix. Unlike Lazy and `nvim-treesitter` though, we will drop these plugins as we will install the LSPs through nix and configure them through `nvim-lspconfig`. Compared to the previous package types, this is simpler as we only need to do the following:
+
+1. Create `lsp.nix` to hold a list of all the LSPs we want to install.
+
+```nix
+{ pkgs, ... }:
+with pkgs;
+[
+  # Insert LSPs, DAPs, formatters, here!
+  lua-language-server
+  stylua
+]
+```
+
+2. Add this list to the `programs.neovim.extraPackages` to let `home-manager` handle the installation.
+
+```nix
+{ pkgs, ... }:
+let
+  # Get the list of LSPs
+  lsps = import ./lsp { inherit pkgs; };
+in
+{
+  programs.neovim = {
+    enable = true;
+    extraPackages =
+      with pkgs;
+      [
+        # Other packages
+      ]
+      ++ lsps;
+  };
+}
+```
+
+Consequently, after installation of these packages, `home-manager` will also add their binaries to Neovim's PATH.
+
+> We can also check if these binaries (e.g. Lua LSP) are available through running the following in Neovim
+> `:echo executable('lua-language-server')`
+
+# Extras
+
+Some lua plugins may have external dependencies. Binaries like `ripgrep` and `fd` can be used with `telescope.nvim` as a faster `grep` and `find`. Like the LSPs, these packages will be installed by `home-manager` through the `programs.neovim.extraPackages`
+
+```nix
+{ pkgs, ... }:
+let
+  # Get the list of LSPs
+  lsps = import ./lsp { inherit pkgs; };
+in
+{
+  programs.neovim = {
+    enable = true;
+    extraPackages =
+      with pkgs;
+      [
+        # Other packages
+        ripgrep
+        fd
+      ]
+      ++ lsps;
+  };
+}
+```
+
+> Include also a clipboard provider (`xclip` for X11; `wl-clipboard` for wayland) to enable yanking to system clipboard
+
+# Other steps
+
+Lastly, we need to set a few overrides to ensure that our neovim configuration will not misbehave in a NixOS system.
+
+1. `lazy.nvim` should not fallback to git nor install missing plugins.
+   This is set by `lazy.opts.dev.fallback = false` and `lazy.opts.install.missing = false`.
+
+2. Include `parserpath` in the runtimepath.
+   Simply adding it through `vim.opt.rtp:prepend` will fail as Lazy clears the runtimepath upon setup for performance reasons.
+   We can set this through `lazy.opts.performance.rtp.paths = { "${parserpath}" }`
+
+   > Do note that we can interpolate `parserpath` in the `extraLuaConfig` portion by using nix's `${}`. Do not forget to surround it in quotes!
+
+3. `nvim-treesitter` should not auto install parsers!
+   This is set by clearing `nvim-treesitter.opts.ensure_installed`.
+   > `ensure_installed` is a lua table that contains the parsers `nvim-treesitter` expects to install. I created a utility function in my own `treesitter.lua` that notifies the user if a parser is missing.
+
+
