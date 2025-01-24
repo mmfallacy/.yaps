@@ -87,7 +87,7 @@ in
 ...
 ```
 
-3. Create the link farm and return the path;
+3. Create the link farm `lazy-plugins` and return the path;
 
 ```nix
 # lazy.nix
@@ -99,10 +99,68 @@ in
 in lazypath
 ```
 
-These steps gives us the in-store location of our replicated plugin directory full of symlinks. However, this is not yet enough to let Lazy handle the plugins. If we simply symlink `lazypath` to the normal plugin directory location (`$XDG_DATA_HOME/nvim/lazy`), Lazy would still not recognize these plugins as installed.
+These steps gives us the in-store location (`lazypath`) of our replicated `lazy-plugins` directory full of symlinks. However, this is not yet enough to let Lazy handle the plugins. If we simply symlink `lazypath` to the normal plugin directory location (`$XDG_DATA_HOME/nvim/lazy`), Lazy would still not recognize these plugins as installed.
 
 > Why? Refer to `lazy.nvim`'s source code on how it handles plugin loading.
 
 Luckily, Lazy also allows the user to set a `dev` option containing a `path` and a `patterns` field. When set, lazy will source all plugins with names that match `dev.patterns` from the provided `dev.path`. We will use this to our advantage by setting `dev.path = lazypath` with `dev.patterns = {" "}` to target all packages. This will let Lazy know that we expect to source all plugins from a local directory in the nix store.
 
 ### Treesitter Parsers
+
+While normal lua packages are handled by something like `lazy.nvim`, Treesitter parsers are also installed through `nvim-treesitter`'s `:TSInstall` command. Again, this is problematic as we want Nix to handle all package installations. Luckily, we can mimic how `nvim-treesitter` installs parsers in a similar fashion:
+
+1. Create `treesitter.nix` to contain all treesitter related sections.
+
+> Do observe that `nvim-treesitter` exists as a package available in Nixpkgs. This makes our lives a bit more easier.
+
+```nix
+# treesitter.nix
+{ pkgs, ... }:
+let
+  inherit (pkgs.vimPlugins) nvim-treesitter;
+in
+{ }
+```
+
+2. Specify all grammars you want to include.
+
+The `nvim-treesitter` nix package provides us a neat way of creating a derivation of `nvim-treesitter` along with the grammars.
+
+```nix
+# treesitter.nix
+{ pkgs, ... }:
+let
+  inherit (pkgs.vimPlugins) nvim-treesitter;
+
+  TSwithAllGrammars = nvim-treesitter.withAllGrammars;
+  TSwithGrammars = nvim-treesitter.withPlugins (
+    grammars: with grammars; [
+      # Insert grammars you want to include
+      # This list is conceptually equivalent to nvim-treesitter's ensure_installed
+      # where you can define which grammars will be installed.
+    ]
+  );
+in
+{ }
+```
+
+3. Create the parser directory with all grammar parsers symlinked.
+
+```nix
+# treesitter.nix
+{ pkgs, ... }:
+# Previous steps
+# ...
+pkgs.symlinkJoin {
+  name = "nvim-treesitter-grammars";
+  # You can also use TSwithAllGrammars!
+  # We use the dependencies attribute of the variants of treesitter we've created previously.
+  paths = TSwithGrammars.dependencies;
+}
+```
+
+> Do not forget to import this to get the path!
+
+We then obtain the in-store location of `nvim-treesitter-grammars` as `parserpath`. Like `lazy-nvim`'s `dev.path`, `nvim-treesitter` also allows the user to set a `parser_install_dir` path. We can then use this to tell Neovim to look for parsers in `parserpath`. Lastly, ss per the documentation, we also need to add `parserpath` in neovim's runtimepath.
+
+### LSPs
