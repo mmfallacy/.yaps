@@ -238,16 +238,20 @@ in
 Lastly, we need to set a few overrides to ensure that our neovim configuration will not misbehave in a NixOS system.
 
 1. `lazy.nvim` should not fallback to git nor install missing plugins.
+
    This is set by `lazy.opts.dev.fallback = false` and `lazy.opts.install.missing = false`.
 
 2. Include `parserpath` in the runtimepath.
+
    Simply adding it through `vim.opt.rtp:prepend` will fail as Lazy clears the runtimepath upon setup for performance reasons.
    We can set this through `lazy.opts.performance.rtp.paths = { "${parserpath}" }`
 
    > Do note that we can interpolate `parserpath` in the `extraLuaConfig` portion by using nix's `${}`. Do not forget to surround it in quotes!
 
 3. `nvim-treesitter` should not auto install parsers!
+
    This is set by clearing `nvim-treesitter.opts.ensure_installed`.
+
    > `ensure_installed` is a lua table that contains the parsers `nvim-treesitter` expects to install. I created a utility function in my own `treesitter.lua` that notifies the user if a parser is missing.
 
 ## Final Remarks
