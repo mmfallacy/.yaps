@@ -35,7 +35,8 @@ The other one, which is defined inside of the home-manager's `extraLuaConfig`, i
 
 ```nix
 {
-  xdg.configFile."nvim/lua".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/user/neovim/config/lua"
+  xdg.configFile."nvim/lua".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/user/neovim/config/lua";
 }
 ```
 
@@ -84,19 +85,21 @@ let
 
   entries = builtins.map mkEntryFromDrv plugins;
 in
-...
+{ }
 ```
 
 3. Create the link farm `lazy-plugins` and return the path;
 
 ```nix
 # lazy.nix
-{ lib, pkgs, ... }: let
+{ lib, pkgs, ... }:
+let
   # Previous steps
-  ...
+  #...
 
   lazypath = pkgs.linkFarm "lazy-plugins" entries;
-in lazypath
+in
+lazypath
 ```
 
 These steps gives us the in-store location (`lazypath`) of our replicated `lazy-plugins` directory full of symlinks. However, this is not yet enough to let Lazy handle the plugins. If we simply symlink `lazypath` to the normal plugin directory location (`$XDG_DATA_HOME/nvim/lazy`), Lazy would still not recognize these plugins as installed.
