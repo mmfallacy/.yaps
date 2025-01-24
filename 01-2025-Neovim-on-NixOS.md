@@ -23,8 +23,6 @@ Out of all these options, I decided to go with the fourth one as it would allow 
 
 ## My own home-manager Neovim configuration
 
-> For reference, here is the link for my [.nixconfig's neovim user module](https://github.com/mmfallacy/.nixconfig/tree/main/user/neovim) which is loosely based on this [LazyVim home-manager configuration](https://github.com/LazyVim/LazyVim/discussions/1972)
-
 My home-manager Neovim configuration starts in [`user/neovim/default.nix`](https://github.com/mmfallacy/.nixconfig/blob/e69d9fdca1eab29c1ba7106aa2c1b7ca895c5b8f/user/neovim/default.nix). As I wanted my configuration to support a non-Nix setup, I decided to write two `init.lua`s which serves as the entry point.
 
 One of these entry points (`user/neovim/config/init.lua`) is meant to be used by Neovim as the configuration folder is symlinked/stowed to a normal system's `.config/nvim`. This file contains the code required to install and set up my package manager of choice. Also, this lua code also checks whether it is being run on a NixOS system (thru the `IS_NIXOS`), showing a warning when run in a NixOS environment.
@@ -208,7 +206,7 @@ Consequently, after installation of these packages, `home-manager` will also add
 > We can also check if these binaries (e.g. Lua LSP) are available through running the following in Neovim
 > `:echo executable('lua-language-server')`
 
-# Extras
+### Extras
 
 Some lua plugins may have external dependencies. Binaries like `ripgrep` and `fd` can be used with `telescope.nvim` as a faster `grep` and `find`. Like the LSPs, these packages will be installed by `home-manager` through the `programs.neovim.extraPackages`
 
@@ -235,7 +233,7 @@ in
 
 > Include also a clipboard provider (`xclip` for X11; `wl-clipboard` for wayland) to enable yanking to system clipboard
 
-# Other steps
+### Other steps
 
 Lastly, we need to set a few overrides to ensure that our neovim configuration will not misbehave in a NixOS system.
 
@@ -252,4 +250,6 @@ Lastly, we need to set a few overrides to ensure that our neovim configuration w
    This is set by clearing `nvim-treesitter.opts.ensure_installed`.
    > `ensure_installed` is a lua table that contains the parsers `nvim-treesitter` expects to install. I created a utility function in my own `treesitter.lua` that notifies the user if a parser is missing.
 
-
+## Final Remarks
+
+This yap session aims to outline how I ported my neovim configuration. It is by no means the only way nor the correct way. For reference, here is the link for my [.nixconfig's neovim user module](https://github.com/mmfallacy/.nixconfig/tree/main/user/neovim) which is loosely based on this [LazyVim home-manager configuration](https://github.com/LazyVim/LazyVim/discussions/1972). As a final tip, do not be afraid of prying `nixpkgs` or `home-manager` source code apart. Looking at the internals will help you understand how the options are used and its effect on your neovim configuration.
