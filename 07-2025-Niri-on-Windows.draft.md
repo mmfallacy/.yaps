@@ -16,3 +16,17 @@
 - This component serves as the intermediary layer which bridges user-level X11 and Wayland apps with the Windows Host through RDP connection.[^3]
 
 [^3]: https://github.com/microsoft/wslg?tab=readme-ov-file
+
+- As per the Niri GitHub wiki's page, we are able to use `niri` inside an existing desktop session where it runs as its own window.
+- We will then leverage this fact and run `niri` as a Wayland app inside WSLg by running `niri &`.
+- In this nested compositor mode, `Alt` is used as the default modifier.
+
+## Known Issues:
+
+- Clipboard isn't synced between WSLg's weston and the nested Niri instance.o
+- Niri does not offer out-of-the-box XWayland compatibility.
+- Running X11 apps inside Niri hooks it up to WSLg's XWayland server.
+
+## Nice to Haves:
+
+- Ability to suspend `niri` and its child processes to save up on resources when not in use.
