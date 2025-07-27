@@ -46,4 +46,23 @@
 
 ## Nice to Haves:
 
-- Ability to suspend `niri` and its child processes to save up on resources when not in use.
+### Ability to suspend `niri` and its child processes to save up on resources when not in use.
+
+- In Linux, we are able to suspend processes by sending a `kill` signal: `SIGSTOP` and `SIGTSTP`. These two signals tell the process to "force suspend" and "suspend when ready" respectively.
+- More specifically, we run the following commands:
+  - `kill -STOP <pid>` or `pkill -STOP <pname>`
+  - `kill -TSTP <pid>` or `pkill -TSTP <pname>`
+- Resuming a suspended process requires sending a `SIGCONT` `kill` signal:
+  - `kill -CONT <pid>` or `pkill -CONT <pname>`
+
+> [!TIP]
+> We can inspect information about the running process via the `ps` utility command.
+> Running `ps -o pid,ppid,stat,comm` gives information on the process' ID, parent process ID, status, and command.
+> Seeing `Rl`,`Sl`, and `Tl` on process status means "Running", "Sleeping" (idle), "Suspended".
+
+- Plainly calling `kill` only suspends/continues the given PID, not its child processes. For that we need to use `pkill` and explicitly target all processes with `niri` as the parent: `pkill -TSTP -p <niri-pid>`
+
+  > [!TIP]
+  > We can use `pgrep` to get `niri`'s pid programatically, giving us `pkill -TSTP -p $(pgrep -x niri)`
+
+- However, Niri disowns its child processes upon spawning. Parent PID of the spawned processes point to the session manager. The session manager is the parent of `bash` which is the session leader.
