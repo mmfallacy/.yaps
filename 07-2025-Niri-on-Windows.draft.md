@@ -10,3 +10,9 @@
 - WSL2 introduces major improvements to its predecessor. It now ships with a Full Linux Kernel, with full syscall compatibility as well as systemd support. [^2]
 
 [^2]: https://learn.microsoft.com/en-us/windows/wsl/compare-versions
+
+- As of 2024, WSL now allows running Linux GUI applications (Both X11 and Wayland) through WSLg.
+- WSLg operates by containerizing XWayland, Weston, and the Pulse Audio server into what we call the WSLg System Distro.
+- This component serves as the intermediary layer which bridges user-level X11 and Wayland apps with the Windows Host through RDP connection.[^3]
+
+[^3]: https://github.com/microsoft/wslg?tab=readme-ov-file
