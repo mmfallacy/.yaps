@@ -23,9 +23,26 @@
 
 ## Known Issues:
 
-- Clipboard isn't synced between WSLg's weston and the nested Niri instance.o
 - Niri does not offer out-of-the-box XWayland compatibility.
+
+  > [!NOTE]
+  > Niri will introduce built-in XWayland support through `xwayland-satellite` in the next release (post v25.05.1; Niri bases its release on date like NixOS).
+  > This means that this item point is no longer needed as Niri itself will spawn `xwayland-satellite` on startup and configure the `DISPLAY` variable.
+
+  > [!HINT]
+  > Niri recommends `xwayland-satellite` for introducing XWayland supaport. `xwayland-satellite` implements rootless XWayland without the host compositor's involvment.
+
+- Clipboard isn't synced between WSLg's weston and the nested Niri instance.o
+
+  > [!HINT]
+  > Since WSLg already handles clipboard syncing between the Windows, X11 and Wayland clipboards, we only need to sync WSLg's weston's clipboards and niri.
+  > Also, as we will be using `xwayland-satellite` for XWayland support in Niri, clipboard syncing between X11 and Wayland inside Niri is already handled.
+  > We only need to sync WSLg weston and Niri's wayland clipboards. Fortunately this can be done via `wl-clipboard`'s `wl-paste --watch`' and `wl-copy`.
+
 - Running X11 apps inside Niri hooks it up to WSLg's XWayland server.
+
+  > [!HINT]
+  > Setting XWayland up via `xwayland-satellite` and configuring the `DISPLAY` variable would fix this issue. Since WSLg handles setting `DISPLAY` up, by default, X11 apps that run on WSL will run on WSLg's XWayland.
 
 ## Nice to Haves:
 
