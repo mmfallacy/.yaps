@@ -1,3 +1,6 @@
+> [!NOTE]
+> Since Aug 2025, I have migrated to `mnw` instead of this setup. You can view it [here](https://github.com/mmfallacy/.nixnvim).
+
 # How did I port my Neovim configuration to NixOS
 
 Neovim is a powerful editor that lets you configure it to meet your needs. It has support for a variety of lua plugins in addition to Vim's already powerful capabilities. This has been my go-to-choice for an editor as I became more interested in tinkering with my developer tools.
