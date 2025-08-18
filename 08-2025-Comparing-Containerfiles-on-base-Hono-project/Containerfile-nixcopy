@@ -1,0 +1,36 @@
+FROM nixos/nix:latest AS builder
+
+RUN echo "experimental-features = nix-command flakes" > /etc/nix/nix.conf && \
+    echo "auto-optimise-store = true" >> /etc/nix/nix.conf && \
+    echo "connect-timeout = 30000" >> /etc/nix/nix.conf
+
+COPY flake.nix flake.lock  /tmp/build/
+COPY ./nix/dependencies.nix /tmp/build/nix/
+WORKDIR /tmp/build
+
+RUN nix build .\#dependencies && \
+    mkdir /tmp/nix-store-closure && \
+    nix copy --to /tmp/nix-store-closure \
+    .\#dependencies --no-check-sigs
+
+# RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
+
+FROM busybox:glibc
+
+COPY --from=builder /tmp/nix-store-closure/nix/store /nix/store
+COPY --from=builder /tmp/build/result /dependencies
+
+# Add dependencies onto PATH
+# ARG PATH="$(find -L /dependencies -type d -name bin | tr '\n' ':')\$PATH"
+RUN mkdir /nix-bin && \
+    find -L /dependencies -type f -executable -path "*/bin/*" \
+    -exec ln -sf {} /nix-bin/ \;
+
+ENV PATH="/nix-bin:$PATH"
+WORKDIR /usr/src/app
+
+COPY package.json bun.lock ./
+RUN bun install
+
+COPY . .
+CMD ["bun", "run", "dev"]
