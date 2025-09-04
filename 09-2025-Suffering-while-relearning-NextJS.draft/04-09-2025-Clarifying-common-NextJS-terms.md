@@ -71,7 +71,7 @@ This shows us that by default, `ClientComponent` is rendered once within the ser
 
 With regards to `ClientComponentNoSSR`, the functions is never called within the server thus no HTML rendering gets injected. Instead, NextJS attaches a `<template/>` so that it knows where to render and hydrate the component client-side.
 
-Looking at the actual page output, we see the following
+After hydration and client-side rendering, we obtain the rest of the components as shown below:
 
 ![Actual page look](./zen_eoRgfbmJcv.png)
 
@@ -85,6 +85,9 @@ Looking at the actual page output, we see the following
 </body>
 ```
 
-After hydration and client-side rendering, we obtain the rest of the components.
-
 This shows that the term Client Component is indeed a misnomer. The name "Classic Components" might suite it better.
+
+> [!NOTE]
+> Do note that the `<template/>` attached within the initial page render contains an error message and a stacktrace when `next/dynamic` is used in development mode.
+>
+> This is an implementation detail as per this [GitHub Issue](https://github.com/vercel/next.js/issues/63272) which is only present in development mode.
