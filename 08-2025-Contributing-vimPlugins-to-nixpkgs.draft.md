@@ -10,6 +10,13 @@ Since I already have an existing fork [mmfallacy/nixpkgs](https://github.com/mmf
 - Clone mmfallacy/nixpkgs via `git clone github:mmfallacy/nixpkgs --depth 1`
   > [!NOTE] > `depth=1` ensures that we shallow clone the repository and include only the latest commit. This allows for faster cloning as we will not fetch unnecessary information. This flag also implies `--single-branch`, where we only clone the `master` branch and not the other unrelated branches
 
+> [!TIP]
+> If you have an existing fork and a local clone, you can instead run the following commands:
+>
+> - `git fetch --depth=1 origin master`
+> - `git reset --hard origin master`
+>   which fetches and updates the current HEAD to the latest remote commit
+
 # Add the package using `nix run .#vimPluginsUpdater`.
 
 Nixpkgs fortunately provides an easy way to add Vim and Neovim plugins via the `pkgs/applications/editors/vim/plugins/utils/updater.py`. This is reexported top-level as `packages.${system}.vimPluginsUpdater`[^1].
@@ -69,3 +76,25 @@ Additionally, `live-preview.nvim` optionally depends on a picker plugin. As show
 # Creating a PR
 
 After the previous two steps, we can now push to our fork and proceed to open a pull request.
+
+## Optional. Run `nixpkgs-review-gha` to build on multiple archs and post a summary.
+
+To further help maintainers review your pull request, you can opt to run `nixpkgs-review` yourself via [Defelo/nixpkgs-review-gha](https://github.com/Defelo/nixpkgs-review-gha). More concretely, follow the following steps:
+
+1. Fork [Defelo/nixpkgs-review-gha](https://github.com/Defelo/nixpkgs-review-gha).
+2. Follow the setup steps:
+
+- Enable GitHub Action workflows
+- Optionally [setup automatic self updates](https://github.com/Defelo/nixpkgs-review-gha?tab=readme-ov-file#automatic-self-updates-optional)
+
+3. Provide the necessary GitHub classic token
+
+   > This token will be used for posting `nixpkgs-review` summaries as comment within the PR.
+
+4. Run the `review` workflow with the following information:
+
+- PR number
+- `nixpkgs-review` extra args: `--package vimPlugins.<PLUGIN_NAME>`
+- Post result: ✅
+  > If your PR is currently a draft, to mark it as ready:
+- What to do on review success: `mark_as_ready`
