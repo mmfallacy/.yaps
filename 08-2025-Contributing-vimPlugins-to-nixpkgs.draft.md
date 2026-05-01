@@ -14,7 +14,7 @@ Since I already have an existing fork [mmfallacy/nixpkgs](https://github.com/mmf
 > If you have an existing fork and a local clone, you can instead run the following commands:
 >
 > - `git fetch --depth=1 origin master`
-> - `git reset --hard origin master`
+> - `git reset --hard origin/master`
 >   which fetches and updates the current HEAD to the latest remote commit
 
 # Add the package using `nix run .#vimPluginsUpdater`.
